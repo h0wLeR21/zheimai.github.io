@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Zheim AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #f72585;
+            --tertiary-color: #4cc9f0;
+            --gradient-start: #74ebd5;
+            --gradient-end: #acb6e5;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow-light: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 15px 35px rgba(0, 0, 0, 0.2);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Enhanced Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .navbar h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar h1:before {
+            content: "";
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.3);
+        }
+        
+        .navbar ul {
+            display: flex;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .navbar ul li {
+            margin-left: 15px;
+        }
+        
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .navbar a:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s ease;
+            z-index: -1;
+        }
+        
+        .navbar a:hover:before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        
+        .navbar a:hover {
+            transform: translateY(-3px);
+        }
+        
+        .navbar a.active {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .logout-btn {
+            background: rgba(255, 59, 48, 0.2) !important;
+            border: 1px solid rgba(255, 59, 48, 0.3) !important;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3) !important;
+        }
+        
+        /* User info styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .user-info .username {
+            margin-right: 10px;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .role-badge.caretaker {
+            background: rgba(76, 201, 240, 0.3);
+            border: 1px solid rgba(76, 201, 240, 0.5);
+        }
+        
+        .role-badge.doctor {
+            background: rgba(247, 37, 133, 0.3);
+            border: 1px solid rgba(247, 37, 133, 0.5);
+        }
+        
+        /* Enhanced Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem 6rem;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero:before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            top: -50%;
+            left: -50%;
+            animation: pulse 15s infinite linear;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.05); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+        
+        .hero h2 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 1.5rem auto;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+            position: relative;
+        }
+        
+        /* Enhanced Stats Section */
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            min-width: 180px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transform: translateY(0);
+            transition: var(--transition);
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+        
+        /* Enhanced Wave Design */
+        .wave-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 80px 0 40px;
+            margin-top: -60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .wave {
+            position: absolute;
+            top: -70px;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(255, 255, 255, 0.05)"></path></svg>');
+            background-size: cover;
+        }
+        
+        /* Enhanced Card Container */
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding-bottom: 50px;
+        }
+        
+        /* Enhanced Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            width: 320px;
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        
+        .card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .card:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            z-index: 2;
+            opacity: 0.7;
+            transition: height 0.3s ease;
+        }
+        
+        .card:hover:before {
+            height: 12px;
+        }
+        
+        .card-header {
+            padding: 40px 0 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header i {
+            font-size: 54px;
+            background: linear-gradient(45deg, #333, #666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        
+        .card-body {
+            padding: 30px 25px;
+            text-align: center;
+        }
+        
+        .card h3 {
+            color: #333;
+            margin: 10px 0 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .card p {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+        
+        .card a {
+            display: inline-block;
+            padding: 12px 30px;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .card a:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(-100%);
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        
+        .card a:hover:after {
+            transform: translateX(0);
+        }
+        
+        /* Card Specific Colors */
+        .card.llm:before {
+            background: linear-gradient(90deg, var(--primary-color), #6979F8);
+        }
+        
+        .card.llm .card-header i {
+            background: linear-gradient(45deg, var(--primary-color), #6979F8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card.llm a {
+            background: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .card.llm a:hover {
+            background: #3a56d4;
+            box-shadow: 0 7px 20px rgba(67, 97, 238, 0.4);
+        }
+        
+        .card.face:before {
+            background: linear-gradient(90deg, var(--secondary-color), #FF61D2);
+        }
+        
+        .card.face .card-header i {
+            background: linear-gradient(45deg, var(--secondary-color), #FF61D2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card.face a {
+            background: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+        
+        .card.face a:hover {
+            background: #e01e79;
+            box-shadow: 0 7px 20px rgba(247, 37, 133, 0.4);
+        }
+        
+        .card.report:before {
+            background: linear-gradient(90deg, var(--tertiary-color), #72E5FC);
+        }
+        
+        .card.report .card-header i {
+            background: linear-gradient(45deg, var(--tertiary-color), #72E5FC);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card.report a {
+            background: var(--tertiary-color);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
+        }
+        
+        .card.report a:hover {
+            background: #36b6dd;
+            box-shadow: 0 7px 20px rgba(76, 201, 240, 0.4);
+        }
+        
+        /* Enhanced Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(0, 0, 0, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+            position: relative;
+            overflow: hidden;
+            font-weight: 300;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .footer:before {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--tertiary-color));
+            opacity: 0.3;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 940px) {
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .navbar h1 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar a {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.8rem;
+            }
+            
+            .hero h2 {
+                font-size: 2.2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 350px;
+            }
+            
+            .stat-item {
+                min-width: 140px;
+                padding: 1rem 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .user-info {
+                margin-right: 10px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 1rem 0.5rem;
+            }
+            
+            .navbar h1 {
+                margin-bottom: 1rem;
+            }
+            
+            .navbar ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            
+            .navbar ul li {
+                margin: 0.2rem;
+            }
+            
+            .hero {
+                padding: 3rem 1rem 5rem;
+            }
+            
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .stats-container {
+                gap: 1rem;
+            }
+            
+            .stat-item {
+                min-width: 130px;
+                padding: 1rem;
+            }
+            
+            .stat-number {
+                font-size: 1.8rem;
+            }
+            
+            .user-info {
+                margin: 0.5rem 0;
+                justify-content: center;
+            }
+        }
+        
+        /* Added Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .stat-item:nth-child(1) {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .stat-item:nth-child(2) {
+            animation: float 7s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+        
+        .stat-item:nth-child(3) {
+            animation: float 8s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <h1>Zheim AI</h1>
+        <ul>
+            <li><a href="#" class="active">Home</a></li>
+            <li><a href="llm.html">LLM Model</a></li>
+            <li><a href="#">Face Recognition</a></li>
+            <li><a href="#">Report Generation</a></li>
+            <li id="user-info-container" class="user-info">
+                <span class="username" id="username-display"></span>
+                <span class="role-badge" id="role-badge"></span>
+            </li>
+            <li><a href="login.html" class="logout-btn">Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <h2>Welcome to Zheim AI</h2>
+        <p>Advanced artificial intelligence solutions designed specifically for Alzheimer's patient care and support.</p>
+        
+        <!-- Stats Section -->
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">94%</div>
+                <div class="stat-label">Accuracy Rate</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">5,000+</div>
+                <div class="stat-label">Patients Helped</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Support</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wave Design -->
+    <div class="wave-container">
+        <div class="wave"></div>
+        
+        <!-- Dashboard Section -->
+        <div class="dashboard">
+            <div class="card-container">
+                <!-- LLM Card -->
+                <div class="card llm">
+                    <div class="card-header">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="card-body">
+                        <h3>LLM Model</h3>
+                        <p>Interact with our AI assistant specially designed for Alzheimer's patients. Get personalized responses and support through natural conversation.</p>
+                        <a href="llm.html">Start Chatting</a>
+                    </div>
+                </div>
+                
+                <!-- Face Recognition Card -->
+                <div class="card face">
+                    <div class="card-header">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="card-body">
+                        <h3>Face Recognition</h3>
+                        <p>Identify patients and caretakers using our advanced CNN-based facial recognition system. Enhance security and personalized care.</p>
+                        <a href="#">Launch Scanner</a>
+                    </div>
+                </div>
+                
+                <!-- Report Generation Card -->
+                <div class="card report">
+                    <div class="card-header">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="card-body">
+                        <h3>Report Generation</h3>
+                        <p>Generate comprehensive assessment reports automatically. Track patient progress and get data-driven insights for better care planning.</p>
+                        <a href="#">Create Reports</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 Zheim AI - Transforming Alzheimer's Care with Artificial Intelligence</p>
+    </footer>
+
+    <script>
+        // Check if user is logged in
+        window.addEventListener('load', function() {
+            const role = sessionStorage.getItem("role");
+            const username = sessionStorage.getItem("username");
+            
+            if (!role) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            // Display username
+            const usernameDisplay = document.getElementById("username-display");
+            if (username) {
+                usernameDisplay.textContent = username;
+            } else {
+                usernameDisplay.textContent = "User"; // Default if username is not available
+            }
+            
+            // Display role badge only for caretaker and doctor
+            const roleBadge = document.getElementById("role-badge");
+            if (role === "caretaker") {
+                roleBadge.textContent = "Caretaker";
+                roleBadge.classList.add("caretaker");
+            } else if (role === "doctor") {
+                roleBadge.textContent = "Doctor";
+                roleBadge.classList.add("doctor");
+            } else {
+                // Hide role badge for patients
+                roleBadge.style.display = "none";
+            }
+            
+            // Display role-specific greeting
+            const heroTitle = document.querySelector('.hero h2');
+            if (role === "patient") {
+                heroTitle.textContent = "Welcome to Your Personal Assistant";
+            } else if (role === "caretaker") {
+                heroTitle.textContent = "Welcome to Caretaker Dashboard";
+            } else if (role === "doctor") {
+                heroTitle.textContent = "Welcome to Doctor Dashboard";
+            }
+        });
+    </script>
+</body>
+</html>

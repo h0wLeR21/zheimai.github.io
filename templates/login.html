@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Zheim AI</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left Side -->
+        <div class="login-left">
+            <h1>Welcome to <br><span>Zheim AI</span></h1>
+            <p>Your smart assistant for Alzheimer's care.</p>
+        </div>
+
+        <!-- Right Side (Login Form) -->
+        <div class="login-right">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <select id="role">
+                        <option value="patient">Patient</option>
+                        <option value="caretaker">Caretaker</option>
+                        <option value="doctor">Doctor</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit">Login</button>
+                <p id="error-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="../static/js/script.js"></script>
+</body>
+</html>
