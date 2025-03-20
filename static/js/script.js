@@ -8,6 +8,7 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
     // User database
     const users = [
         { username: "admin", password: "admin123", role: "patient" },
+        { username: "Shone", password: "shone123", role: "patient" },
         { username: "care", password: "care123", role: "caretaker" },
         { username: "doct", password: "doct123", role: "doctor" }
     ];

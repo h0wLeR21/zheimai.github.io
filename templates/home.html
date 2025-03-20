@@ -608,7 +608,7 @@
             <li><a href="#" class="active">Home</a></li>
             <li><a href="llm.html">LLM Model</a></li>
             <li><a href="#">Face Recognition</a></li>
-            <li><a href="#">Report Generation</a></li>
+            <li><a href="assessment">Assessment</a></li> <!-- Changed from "#" to "assessment" -->
             <li id="user-info-container" class="user-info">
                 <span class="username" id="username-display"></span>
                 <span class="role-badge" id="role-badge"></span>
@@ -616,6 +616,7 @@
             <li><a href="login.html" class="logout-btn">Logout</a></li>
         </ul>
     </nav>
+    
 
     <!-- Hero Section -->
     <div class="hero">
@@ -629,8 +630,8 @@
                 <div class="stat-label">Accuracy Rate</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">5,000+</div>
-                <div class="stat-label">Patients Helped</div>
+                <div class="stat-number">5,000hr</div>
+                <div class="stat-label">Experience</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number">24/7</div>
@@ -638,7 +639,491 @@
             </div>
         </div>
     </div>
+    <!-- Add this section to your home.html file to display reminders for patients -->
+
+    <!-- Patient Reminders Timeline - Only visible to patients -->
+    <div class="patient-reminders-section" style="max-width: 1200px; margin: 20px auto 40px; padding: 0 20px;">
+        <div class="section-header" style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: white; font-size: 2rem; font-weight: 600; margin-bottom: 10px;">Your Daily Schedule</h2>
+            <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.1rem; max-width: 700px; margin: 0 auto;">
+                Stay on track with your medication and activities for the day.
+            </p>
+        </div>
+        
+        <div class="reminders-container" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+            <!-- Current time indicator -->
+            <div class="current-time" style="text-align: center; margin-bottom: 30px;">
+                <div style="display: inline-block; background: rgba(0, 0, 0, 0.2); padding: 10px 25px; border-radius: 30px; color: white; font-size: 1.3rem;">
+                    <span id="current-time-display">Loading...</span>
+                </div>
+                <div style="margin-top: 5px; color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;" id="current-date-display"></div>
+            </div>
+            
+            <!-- Reminders timeline with fixed height and scrolling -->
+            <div class="timeline-container" style="position: relative; padding-left: 30px; height: 400px; overflow-y: auto;">
+                <!-- Vertical timeline line -->
+                <div class="timeline-line" style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: rgba(255, 255, 255, 0.3);"></div>
+                
+                <!-- Timeline will be populated here -->
+                <div id="patient-timeline" style="min-height: 100px;">
+                    <div class="loading-timeline" style="text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.7);">
+                        Loading your schedule...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty state message -->
+            <div id="empty-schedule" style="display: none; text-align: center; padding: 40px 20px; color: rgba(255, 255, 255, 0.7);">
+                <div style="font-size: 3rem; margin-bottom: 15px;">🏝️</div>
+                <h3 style="margin-bottom: 10px; color: white;">Your schedule is clear!</h3>
+                <p>You don't have any reminders scheduled for today.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const role = sessionStorage.getItem("role");
+            const username = sessionStorage.getItem("username");
+            
+            // Only show patient reminders for patients, hide for doctors and caretakers
+            const patientRemindersSection = document.querySelector('.patient-reminders-section');
+            const doctorRemindersSection = document.querySelector('.reminders-section');
+            
+            if (role === "patient" && patientRemindersSection) {
+                patientRemindersSection.style.display = 'block';
+                if (doctorRemindersSection) {
+                    doctorRemindersSection.style.display = 'none';
+                }
+                // Load patient's reminders
+                loadPatientReminders();
+                // Update time immediately and then every second
+                updateCurrentTime();
+                // Set interval to update time every second
+                setInterval(updateCurrentTime, 1000);
+                
+                // Add custom scrollbar styling for the timeline container
+                const timelineContainer = document.querySelector('.timeline-container');
+                if (timelineContainer) {
+                    timelineContainer.style.scrollbarWidth = 'thin';  // For Firefox
+                    timelineContainer.style.scrollbarColor = 'rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1)';  // For Firefox
+                    
+                    // For Chrome/Safari/Edge
+                    const styleSheet = document.createElement('style');
+                    styleSheet.textContent = `
+                        .timeline-container::-webkit-scrollbar {
+                            width: 8px;
+                        }
+                        .timeline-container::-webkit-scrollbar-track {
+                            background: rgba(0, 0, 0, 0.1);
+                            border-radius: 4px;
+                        }
+                        .timeline-container::-webkit-scrollbar-thumb {
+                            background-color: rgba(255, 255, 255, 0.3);
+                            border-radius: 4px;
+                        }
+                    `;
+                    document.head.appendChild(styleSheet);
+                }
+            } else if (patientRemindersSection) {
+                patientRemindersSection.style.display = 'none';
+            }
+
+        // Improved alert checking function with better timing
+        function checkForDueReminders() {
+            if (!allPatientReminders || allPatientReminders.length === 0) return;
+            
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentSecond = now.getSeconds();
+            
+            // Calculate the total seconds for current time
+            const currentTotalSeconds = currentHour * 3600 + currentMinute * 60 + currentSecond;
+            
+            // Look for reminders that are due within the next 20 seconds
+            const dueReminders = allPatientReminders.filter(reminder => {
+                // Skip if this reminder has already been alerted
+                if (reminder.alerted === true) return false;
+                
+                const [reminderHour, reminderMinute] = reminder.time.split(':').map(Number);
+                
+                // Calculate the total seconds for reminder time
+                const reminderTotalSeconds = reminderHour * 3600 + reminderMinute * 60;
+                
+                // Check if the reminder is within 20 seconds of current time
+                const secondsDifference = reminderTotalSeconds - currentTotalSeconds;
+                
+                return (secondsDifference >= 0 && secondsDifference <= 20);
+            });
+            
+            if (dueReminders.length > 0) {
+                // Show alert for the first due reminder
+                showReminderAlert(dueReminders[0]);
+                
+                // Mark this reminder as alerted to avoid showing it again
+                dueReminders[0].alerted = true;
+                
+                // Also highlight the reminder in the timeline
+                highlightReminderInTimeline(dueReminders[0].id);
+            }
+        }
+
+        // Improved alert display function with better cleanup
+        function showReminderAlert(reminder) {
+            // Format time
+            const [hours, minutes] = reminder.time.split(':');
+            const hour12 = hours % 12 || 12;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const timeString = `${hour12}:${minutes.padStart(2, '0')} ${ampm}`;
+            
+            // Set alert content
+            document.getElementById('alert-title').textContent = reminder.title;
+            document.getElementById('alert-message').textContent = `It's ${timeString}. ${reminder.description || ''}`;
+            
+            // Show the alert
+            const alertElement = document.getElementById('reminder-alert');
+            alertElement.style.display = 'block';
+            
+            // Add sound if possible (may require user interaction first)
+            try {
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+                audio.play();
+            } catch (e) {
+                console.log('Could not play sound automatically');
+            }
+            
+            // Clear any existing timeout to prevent multiple timeouts
+            if (alertTimeout) {
+                clearTimeout(alertTimeout);
+                alertTimeout = null;
+            }
+            
+            // Set up close button to properly clean up
+            document.getElementById('close-alert').onclick = function() {
+                // Hide the alert
+                alertElement.style.display = 'none';
+                
+                // Clean up the timeout if it exists
+                if (alertTimeout) {
+                    clearTimeout(alertTimeout);
+                    alertTimeout = null;
+                }
+                
+                // Remove highlight from the timeline item
+                const highlightedItems = document.querySelectorAll('.reminder-card[style*="animation"]');
+                highlightedItems.forEach(item => {
+                    item.style.animation = '';
+                    item.style.boxShadow = '';
+                    item.style.background = 'rgba(0, 0, 0, 0.2)';
+                });
+            };
+            
+            // Auto-dismiss after 30 seconds
+            alertTimeout = setTimeout(() => {
+                alertElement.style.display = 'none';
+                alertTimeout = null;
+                
+                // Also remove highlight
+                const highlightedItems = document.querySelectorAll('.reminder-card[style*="animation"]');
+                highlightedItems.forEach(item => {
+                    item.style.animation = '';
+                    item.style.boxShadow = '';
+                    item.style.background = 'rgba(0, 0, 0, 0.2)';
+                });
+            }, 30000);
+        }
+
+        // Improved setup function with more frequent checks
+        function setupReminderChecks() {
+            // Clear any existing interval
+            if (window.reminderCheckInterval) {
+                clearInterval(window.reminderCheckInterval);
+            }
+            
+            // Check for due reminders every 5 seconds (more frequent to catch the 20-second window)
+            window.reminderCheckInterval = setInterval(checkForDueReminders, 5000);
+            
+            // Also check immediately
+            checkForDueReminders();
+            
+            console.log("Reminder check system set up successfully");
+        }
+            
+        // Function to update current time with seconds
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('current-time-display');
+            const dateElement = document.getElementById('current-date-display');
+            
+            // Format time with seconds (e.g., "3:45:23 PM")
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // Convert 0 to 12
+            
+            timeElement.textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+            
+            // Format date (e.g., "Monday, March 20, 2025")
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = now.toLocaleDateString('en-US', options);
+        }
+            
+        // Function to load reminders for the patient
+        function loadPatientReminders() {
+            if (!username) {
+                console.error("No username found in session");
+                showEmptyState("Unable to load your schedule.");
+                return;
+            }
+            
+            // Call API to get reminders for this patient
+            fetch('/get_reminders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    patient_name: username
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.reminders && data.reminders.length > 0) {
+                    // Store reminders globally for alert checking
+                    allPatientReminders = data.reminders;
+                    
+                    // Render timeline
+                    renderTimeline(data.reminders);
+                    
+                    // Set up reminder alert checks
+                    setupReminderChecks();
+                } else {
+                    showEmptyState();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading reminders:', error);
+                showEmptyState("Error loading your schedule. Please try again later.");
+            });
+        }
+            
+            
+        // Function to render the timeline
+        function renderTimeline(reminders) {
+            const timelineContainer = document.getElementById('patient-timeline');
+            timelineContainer.innerHTML = ''; // Clear loading message
+            
+            // Get current time for comparison
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            
+            // Sort reminders by time
+            reminders.sort((a, b) => {
+                const timeA = a.time.split(':');
+                const timeB = b.time.split(':');
+                const hourA = parseInt(timeA[0]);
+                const hourB = parseInt(timeB[0]);
+                if (hourA !== hourB) return hourA - hourB;
+                return parseInt(timeA[1]) - parseInt(timeB[1]);
+            });
+            
+            // Group reminders by status (past, current, upcoming)
+            const pastReminders = [];
+            const currentReminders = [];
+            const upcomingReminders = [];
+            
+            reminders.forEach(reminder => {
+                const [hours, minutes] = reminder.time.split(':').map(Number);
+                
+                if (hours < currentHour || (hours === currentHour && minutes < currentMinute)) {
+                    pastReminders.push(reminder);
+                } else if (hours === currentHour && minutes >= currentMinute && minutes <= currentMinute + 30) {
+                    currentReminders.push(reminder);
+                } else {
+                    upcomingReminders.push(reminder);
+                }
+            });
+            
+            // Render all reminder groups
+            if (currentReminders.length > 0) {
+                renderReminderGroup(timelineContainer, currentReminders, 'Current', '#4cc9f0');
+            }
+            
+            if (upcomingReminders.length > 0) {
+                renderReminderGroup(timelineContainer, upcomingReminders, 'Upcoming', '#4361ee');
+            }
+            
+            if (pastReminders.length > 0) {
+                renderReminderGroup(timelineContainer, pastReminders, 'Past', 'rgba(255, 255, 255, 0.3)');
+            }
+            
+            // Show empty state if no reminders after filtering
+            if (pastReminders.length === 0 && currentReminders.length === 0 && upcomingReminders.length === 0) {
+                showEmptyState();
+            } else {
+                // Scroll to current reminders if they exist
+                if (currentReminders.length > 0) {
+                    setTimeout(() => {
+                        const currentGroup = timelineContainer.querySelector('h3:contains("Current")');
+                        if (currentGroup) {
+                            currentGroup.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }, 300);
+                }
+            }
+        }
+            
+            
+        // Function to render a group of reminders
+        function renderReminderGroup(container, reminders, label, color) {
+            const groupHeader = document.createElement('div');
+            groupHeader.style.marginTop = '25px';
+            groupHeader.style.marginBottom = '15px';
+            groupHeader.style.color = 'white';
+            groupHeader.innerHTML = `<h3 style="font-size: 1.2rem; font-weight: 500;">${label}</h3>`;
+            container.appendChild(groupHeader);
+            
+            reminders.forEach(reminder => {
+                const reminderItem = document.createElement('div');
+                reminderItem.className = 'timeline-item';
+                reminderItem.style.position = 'relative';
+                reminderItem.style.marginBottom = '25px';
+                reminderItem.style.paddingLeft = '15px';
+                
+                // Format time
+                const [hours, minutes] = reminder.time.split(':');
+                const hour12 = hours % 12 || 12;
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const timeString = `${hour12}:${minutes.padStart(2, '0')} ${ampm}`;
+                
+                // Create timeline dot
+                const timelineDot = document.createElement('div');
+                timelineDot.style.position = 'absolute';
+                timelineDot.style.left = '-30px';
+                timelineDot.style.top = '5px';
+                timelineDot.style.width = '12px';
+                timelineDot.style.height = '12px';
+                timelineDot.style.borderRadius = '50%';
+                timelineDot.style.background = color;
+                timelineDot.style.border = '2px solid rgba(0, 0, 0, 0.1)';
+                timelineDot.style.zIndex = '2';
+                reminderItem.appendChild(timelineDot);
+                
+                // Create reminder card
+                reminderItem.innerHTML += `
+                    <div class="reminder-card" style="background: rgba(0, 0, 0, 0.2); border-left: 3px solid ${color}; padding: 15px; border-radius: 0 8px 8px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <h4 style="margin: 0; font-size: 1.1rem; color: white;">${reminder.title}</h4>
+                            <span style="background: rgba(0, 0, 0, 0.2); padding: 2px 10px; border-radius: 15px; font-size: 0.85rem; color: white;">${timeString}</span>
+                        </div>
+                        <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;">${reminder.description || 'No description'}</p>
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5);">
+                            <span>${reminder.frequency}</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(reminderItem);
+            });
+        }
+            
+            // Function to show empty state
+            function showEmptyState(message) {
+                const timelineContainer = document.querySelector('.timeline-container');
+                timelineContainer.style.display = 'none';
+                
+                const emptyState = document.getElementById('empty-schedule');
+                emptyState.style.display = 'block';
+                
+                if (message) {
+                    emptyState.innerHTML = `
+                        <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+                        <h3 style="margin-bottom: 10px; color: white;">Something went wrong</h3>
+                        <p>${message}</p>
+                    `;
+                }
+            }
+        });
+    </script>
+    <!-- Add this alert notification system to your patient reminders timeline -->
+
+    <!-- Add this to the reminders-container, right after the current-time div -->
+    <div id="reminder-alert" style="display: none; position: fixed; top: 20px; right: 20px; background: rgba(247, 37, 133, 0.9); color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); z-index: 1000; min-width: 300px; animation: slideIn 0.5s ease-out;">
+        <div style="display: flex; align-items: flex-start;">
+            <div style="font-size: 1.5rem; margin-right: 15px;">⏰</div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 5px 0; font-size: 1.1rem;" id="alert-title">Reminder</h4>
+                <p style="margin: 0; font-size: 0.9rem;" id="alert-message">It's time for your scheduled activity.</p>
+            </div>
+            <button id="close-alert" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 0; margin-left: 10px;">×</button>
+        </div>
+    </div>
+
+    <!-- Add this style block to your head section or in a style tag -->
+    <style>
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .pulse-animation {
+        animation: pulse 1s infinite;
+    }
+    </style>
+
+<!-- Add this to your existing script, inside the DOMContentLoaded event listener -->
+<script>
+// Add this to your existing script, just after the setInterval call for the clock
+
+// Store reminders globally so we can check them
+let allPatientReminders = [];
+let alertTimeout;
+
+// Add this to your loadPatientReminders function, in the .then(data => {...}) block
+// Right after you call renderTimeline(data.reminders):
+allPatientReminders = data.reminders;
+setupReminderChecks();
+
+// Function to highlight a reminder in the timeline
+function highlightReminderInTimeline(reminderId) {
+    // Find the reminder card in the timeline
+    const reminderCards = document.querySelectorAll('.reminder-card');
     
+    reminderCards.forEach(card => {
+        // We can't directly add data-id to the cards in the original code,
+        // so we'll find the card based on content
+        const titleElement = card.querySelector('h4');
+        
+        // Find the matching reminder
+        const reminder = allPatientReminders.find(r => r.id === reminderId);
+        
+        if (reminder && titleElement && titleElement.textContent === reminder.title) {
+            // Add highlight effect
+            card.style.animation = 'pulse 1s infinite';
+            card.style.boxShadow = '0 0 15px rgba(247, 37, 133, 0.6)';
+            card.style.background = 'rgba(247, 37, 133, 0.2)';
+            
+            // Scroll to the reminder
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+}
+</script>
     <!-- Wave Design -->
     <div class="wave-container">
         <div class="wave"></div>
@@ -676,9 +1161,9 @@
                         <i class="fas fa-file-alt"></i>
                     </div>
                     <div class="card-body">
-                        <h3>Report Generation</h3>
+                        <h3>Assessment</h3>
                         <p>Generate comprehensive assessment reports automatically. Track patient progress and get data-driven insights for better care planning.</p>
-                        <a href="#">Create Reports</a>
+                        <a href="assessment">Create Reports</a> <!-- Changed from "#" to "assessment" -->
                     </div>
                 </div>
             </div>
@@ -689,6 +1174,350 @@
     <footer class="footer">
         <p>© 2025 Zheim AI - Transforming Alzheimer's Care with Artificial Intelligence</p>
     </footer>
+    <!-- Add this section to your home.html file, right after the hero section -->
+
+<!-- Reminders Section -->
+<div class="reminders-section" style="max-width: 1200px; margin: 20px auto 40px; padding: 0 20px;">
+    <div class="section-header" style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: white; font-size: 2rem; font-weight: 600; margin-bottom: 10px;">Patient Reminders</h2>
+        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.1rem; max-width: 700px; margin: 0 auto;">
+            Manage medication schedules and important activities for patients.
+        </p>
+    </div>
+    
+    <div class="reminders-container" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+        <!-- Patient Selection Area -->
+        <div class="patient-select" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 15px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label for="home-patient-name" style="display: block; color: white; margin-bottom: 8px; font-weight: 500;">Patient Name:</label>
+                    <input type="text" id="home-patient-name" placeholder="Enter patient name" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white;">
+                </div>
+                <button id="home-load-reminders-btn" style="background: var(--tertiary-color); color: white; border: none; border-radius: 8px; padding: 12px 20px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">Load Reminders</button>
+                <button id="home-add-reminder-btn" style="background: var(--primary-color); color: white; border: none; border-radius: 8px; padding: 12px 20px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">Add Reminder</button>
+            </div>
+        </div>
+        
+        <!-- Today's Reminders -->
+        <div class="today-reminders">
+            <h3 style="color: white; margin-bottom: 15px; font-size: 1.3rem;">Today's Reminders</h3>
+            <div id="home-reminders-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div id="home-no-reminders" style="grid-column: 1 / -1; text-align: center; padding: 30px; color: rgba(255, 255, 255, 0.7); font-style: italic;">
+                    Please select a patient to view their reminders.
+                </div>
+                <!-- Reminder cards will be added here dynamically -->
+            </div>
+        </div>
+        
+        <!-- Add Reminder Form (initially hidden) -->
+        <div id="home-add-reminder-form" style="display: none; margin-top: 30px; background: rgba(0, 0, 0, 0.2); padding: 25px; border-radius: 12px;">
+            <h3 style="color: white; margin-top: 0; margin-bottom: 20px; font-size: 1.3rem;">Add New Reminder</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="home-reminder-title" style="display: block; color: white; margin-bottom: 8px;">Title:</label>
+                    <input type="text" id="home-reminder-title" placeholder="e.g., Take Medication" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white;">
+                </div>
+                
+                <div>
+                    <label for="home-reminder-time" style="display: block; color: white; margin-bottom: 8px;">Time:</label>
+                    <input type="time" id="home-reminder-time" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white;">
+                </div>
+                
+                <div>
+                    <label for="home-reminder-frequency" style="display: block; color: white; margin-bottom: 8px;">Frequency:</label>
+                    <select id="home-reminder-frequency" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white;">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="once">Once</option>
+                    </select>
+                </div>
+                
+                <div style="grid-column: span 2;">
+                    <label for="home-reminder-description" style="display: block; color: white; margin-bottom: 8px;">Description:</label>
+                    <textarea id="home-reminder-description" placeholder="Additional details..." style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white; min-height: 80px;"></textarea>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 15px;">
+                <button id="home-cancel-reminder-btn" style="background: rgba(255, 59, 48, 0.2); color: white; border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: 500;">Cancel</button>
+                <button id="home-save-reminder-btn" style="background: var(--primary-color); color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: 500;">Save Reminder</button>
+            </div>
+        </div>
+        
+        <!-- Error message area -->
+        <div id="home-reminders-error" style="display: none; margin-top: 20px; padding: 15px; background: rgba(255, 59, 48, 0.2); border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 8px; color: white;">
+        </div>
+    </div>
+</div>
+
+<!-- Add JavaScript for reminder functionality -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only show reminders section for doctors and caretakers
+        const role = sessionStorage.getItem("role");
+        if (role !== "doctor" && role !== "caretaker") {
+            const remindersSection = document.querySelector('.reminders-section');
+            if (remindersSection) {
+                remindersSection.style.display = 'none';
+            }
+        }
+        
+        // Add event listeners for buttons
+        document.getElementById('home-load-reminders-btn').addEventListener('click', loadReminders);
+        document.getElementById('home-add-reminder-btn').addEventListener('click', showAddReminderForm);
+        document.getElementById('home-save-reminder-btn').addEventListener('click', saveReminder);
+        document.getElementById('home-cancel-reminder-btn').addEventListener('click', hideAddReminderForm);
+        
+        // Function to load reminders for a patient
+        function loadReminders() {
+            const patientName = document.getElementById('home-patient-name').value.trim();
+            
+            if (!patientName) {
+                showError('Please enter a patient name');
+                return;
+            }
+            
+            // Clear previous error
+            document.getElementById('home-reminders-error').style.display = 'none';
+            
+            // Call API to get reminders
+            fetch('/get_reminders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    patient_name: patientName
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const remindersList = document.getElementById('home-reminders-list');
+                const noReminders = document.getElementById('home-no-reminders');
+                
+                // Clear previous reminders
+                remindersList.innerHTML = '';
+                
+                if (data.reminders && data.reminders.length > 0) {
+                    // Remove the "no reminders" message
+                    if (noReminders) {
+                        remindersList.removeChild(noReminders);
+                    }
+                    
+                    // Create a reminder card for each reminder
+                    data.reminders.forEach(reminder => {
+                        const reminderCard = document.createElement('div');
+                        reminderCard.className = 'reminder-card';
+                        reminderCard.style.background = 'rgba(255, 255, 255, 0.1)';
+                        reminderCard.style.borderRadius = '12px';
+                        reminderCard.style.padding = '20px';
+                        reminderCard.style.position = 'relative';
+                        reminderCard.style.transition = 'all 0.3s ease';
+                        
+                        // Add hover effect
+                        reminderCard.addEventListener('mouseenter', function() {
+                            this.style.transform = 'translateY(-5px)';
+                            this.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
+                        });
+                        
+                        reminderCard.addEventListener('mouseleave', function() {
+                            this.style.transform = 'translateY(0)';
+                            this.style.boxShadow = 'none';
+                        });
+                        
+                        // Format time for display
+                        let timeDisplay = reminder.time;
+                        if (timeDisplay.includes(':')) {
+                            const [hours, minutes] = timeDisplay.split(':');
+                            const period = hours >= 12 ? 'PM' : 'AM';
+                            const hour12 = hours % 12 || 12;
+                            timeDisplay = `${hour12}:${minutes} ${period}`;
+                        }
+                        
+                        // Set border color based on frequency
+                        let borderColor = 'rgba(255, 255, 255, 0.2)';
+                        if (reminder.frequency === 'daily') {
+                            borderColor = 'rgba(76, 201, 240, 0.5)';  // Blue for daily
+                        } else if (reminder.frequency === 'weekly') {
+                            borderColor = 'rgba(247, 37, 133, 0.5)';  // Pink for weekly
+                        } else if (reminder.frequency === 'monthly') {
+                            borderColor = 'rgba(67, 97, 238, 0.5)';   // Purple for monthly
+                        }
+                        
+                        reminderCard.style.border = `1px solid ${borderColor}`;
+                        
+                        reminderCard.innerHTML = `
+                            <div style="position: absolute; top: 15px; right: 15px;">
+                                <button class="delete-reminder-btn" data-id="${reminder.id}" style="background: rgba(255, 59, 48, 0.2); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: white; font-size: 18px; display: flex; align-items: center; justify-content: center;">×</button>
+                            </div>
+                            
+                            <h4 style="color: white; margin-top: 0; margin-bottom: 12px; font-size: 1.2rem; padding-right: 30px;">${reminder.title}</h4>
+                            
+                            <div style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; font-size: 0.9rem;">
+                                ${reminder.description || 'No description'}
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <div style="background: rgba(0, 0, 0, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; color: white;">
+                                    <i class="fas fa-clock" style="margin-right: 5px;"></i> ${timeDisplay}
+                                </div>
+                                <div style="background: rgba(0, 0, 0, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; color: white;">
+                                    <i class="fas fa-redo" style="margin-right: 5px;"></i> ${reminder.frequency}
+                                </div>
+                            </div>
+                        `;
+                        
+                        remindersList.appendChild(reminderCard);
+                        
+                        // Add event listener for delete button
+                        const deleteBtn = reminderCard.querySelector('.delete-reminder-btn');
+                        deleteBtn.addEventListener('click', function() {
+                            deleteReminder(reminder.id);
+                        });
+                    });
+                } else {
+                    // Show "no reminders" message
+                    const noRemindersMsg = document.createElement('div');
+                    noRemindersMsg.id = 'home-no-reminders';
+                    noRemindersMsg.style.gridColumn = '1 / -1';
+                    noRemindersMsg.style.textAlign = 'center';
+                    noRemindersMsg.style.padding = '30px';
+                    noRemindersMsg.style.color = 'rgba(255, 255, 255, 0.7)';
+                    noRemindersMsg.style.fontStyle = 'italic';
+                    noRemindersMsg.textContent = `No reminders found for ${patientName}.`;
+                    
+                    remindersList.appendChild(noRemindersMsg);
+                }
+            })
+            .catch(error => {
+                showError(`Error: ${error.message || 'Could not load reminders'}`);
+                console.error('Error:', error);
+            });
+        }
+        
+        // Function to show the add reminder form
+        function showAddReminderForm() {
+            const patientName = document.getElementById('home-patient-name').value.trim();
+            
+            if (!patientName) {
+                showError('Please enter a patient name first');
+                return;
+            }
+            
+            document.getElementById('home-add-reminder-form').style.display = 'block';
+            document.getElementById('home-reminders-error').style.display = 'none';
+            
+            // Reset form fields
+            document.getElementById('home-reminder-title').value = '';
+            document.getElementById('home-reminder-description').value = '';
+            document.getElementById('home-reminder-time').value = '08:00';  // Default time
+            document.getElementById('home-reminder-frequency').value = 'daily';  // Default frequency
+        }
+        
+        // Function to hide the add reminder form
+        function hideAddReminderForm() {
+            document.getElementById('home-add-reminder-form').style.display = 'none';
+        }
+        
+        // Function to save a new reminder
+        function saveReminder() {
+            const patientName = document.getElementById('home-patient-name').value.trim();
+            const title = document.getElementById('home-reminder-title').value.trim();
+            const description = document.getElementById('home-reminder-description').value.trim();
+            const time = document.getElementById('home-reminder-time').value;
+            const frequency = document.getElementById('home-reminder-frequency').value;
+            const username = sessionStorage.getItem("username") || role;  // Use username from session or role as fallback
+            
+            if (!title || !time) {
+                showError('Title and time are required');
+                return;
+            }
+            
+            // Call API to add reminder
+            fetch('/add_reminder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    patient_name: patientName,
+                    title: title,
+                    description: description,
+                    time: time,
+                    frequency: frequency,
+                    created_by: username
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    hideAddReminderForm();
+                    loadReminders();  // Reload the reminders list
+                } else {
+                    showError(data.error || 'Failed to add reminder');
+                }
+            })
+            .catch(error => {
+                showError(`Error: ${error.message || 'Could not add reminder'}`);
+                console.error('Error:', error);
+            });
+        }
+        
+        // Function to delete a reminder
+        function deleteReminder(reminderId) {
+            if (!confirm('Are you sure you want to delete this reminder?')) {
+                return;
+            }
+            
+            // Call API to delete reminder
+            fetch('/delete_reminder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: reminderId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    loadReminders();  // Reload the reminders list
+                } else {
+                    showError(data.error || 'Failed to delete reminder');
+                }
+            })
+            .catch(error => {
+                showError(`Error: ${error.message || 'Could not delete reminder'}`);
+                console.error('Error:', error);
+            });
+        }
+        
+        // Helper function to show errors
+        function showError(message) {
+            const errorElement = document.getElementById('home-reminders-error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    });
+</script>
 
     <script>
         // Check if user is logged in

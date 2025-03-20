@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment - Zheim AI</title>
+    <!-- Include your existing CSS files here -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #f72585;
+            --tertiary-color: #4cc9f0;
+            --gradient-start: #74ebd5;
+            --gradient-end: #acb6e5;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow-light: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 15px 35px rgba(0, 0, 0, 0.2);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Enhanced Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .navbar h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar h1:before {
+            content: "";
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.3);
+        }
+        
+        .navbar ul {
+            display: flex;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .navbar ul li {
+            margin-left: 15px;
+        }
+        
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .navbar a:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s ease;
+            z-index: -1;
+        }
+        
+        .navbar a:hover:before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        
+        .navbar a:hover {
+            transform: translateY(-3px);
+        }
+        
+        .navbar a.active {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* User info styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .user-info .username {
+            margin-right: 10px;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .role-badge.caretaker {
+            background: rgba(76, 201, 240, 0.3);
+            border: 1px solid rgba(76, 201, 240, 0.5);
+        }
+        
+        .role-badge.doctor {
+            background: rgba(247, 37, 133, 0.3);
+            border: 1px solid rgba(247, 37, 133, 0.5);
+        }
+        
+        .logout-btn {
+            background: rgba(255, 59, 48, 0.2) !important;
+            border: 1px solid rgba(255, 59, 48, 0.3) !important;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 59, 48, 0.3) !important;
+        }
+        
+        /* Main content container */
+        .main-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        /* Page header */
+        .page-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Assessment container styles */
+        .assessment-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Tab styles */
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab.active:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--secondary-color);
+        }
+        
+        /* Tab content styles */
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Create assessment styles */
+        .patient-info {
+            margin-bottom: 25px;
+        }
+        
+        .patient-info label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .patient-info input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        /* Questions list styles */
+        .question-selection h3 {
+            color: white;
+            margin: 25px 0 15px;
+            font-weight: 600;
+        }
+        
+        .questions-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .question-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .question-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .question-item input[type="checkbox"] {
+            margin-top: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .question-item label {
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        /* Button styles */
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: #3a56d4;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--tertiary-color);
+            color: white;
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: #36b6dd;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 201, 240, 0.4);
+        }
+        
+        .btn-danger {
+            background: var(--secondary-color);
+            color: white;
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+        }
+        
+        .btn-danger:hover {
+            background: #e01e79;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(247, 37, 133, 0.4);
+        }
+        
+        /* Assessment form styles */
+        .assessment-form {
+            margin-top: 30px;
+        }
+        
+        #assessment-questions {
+            margin-top: 20px;
+        }
+        
+        .question-container {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .question-container p {
+            color: white;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .question-container textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Reports list styles */
+        .reports-list {
+            max-height: 500px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .report-link {
+            display: block;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .report-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                padding: 12px 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .tab.active:after {
+                display: none;
+            }
+            
+            .tab-content {
+                padding: 20px 15px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <h1>Zheim AI</h1>
+        <ul>
+            <li><a href="home">Home</a></li>
+            <li><a href="llm">LLM Model</a></li>
+            <li><a href="#">Face Recognition</a></li>
+            <li><a href="assessment" class="active">Assessment</a></li>
+            <li id="user-info-container" class="user-info">
+                <span class="username" id="username-display"></span>
+                <span class="role-badge" id="role-badge"></span>
+            </li>
+            <li><a href="login.html" class="logout-btn">Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="page-header">
+            <h1>Alzheimer's Assessment</h1>
+            <p>Create new assessments and manage existing reports</p>
+        </div>
+        
+        <div class="assessment-container">
+            <div class="tabs">
+                <button class="tab active" data-tab="create-assessment">Create New Assessment</button>
+                <button class="tab" data-tab="view-reports">View Reports</button>
+            </div>
+            
+            <div class="tab-content active" id="create-assessment">
+                <div class="patient-info">
+                    <label for="patient-name">Patient Name:</label>
+                    <input type="text" id="patient-name" placeholder="Enter patient name">
+                </div>
+                
+                <div class="question-selection">
+                    <h3>Available Questions</h3>
+                    <div class="questions-list">
+                        {% if questions %}
+                            {% for question in questions %}
+                                <div class="question-item">
+                                    <input type="checkbox" id="q{{ loop.index }}" value="{{ question }}">
+                                    <label for="q{{ loop.index }}">{{ question }}</label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No questions available. Please create a questions.docx file with assessment questions.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <button class="btn btn-secondary" id="select-random">Select 10 Random Questions</button>
+                    <button class="btn btn-primary" id="start-assessment">Start Assessment</button>
+                </div>
+                
+                <div class="assessment-form" style="display: none;">
+                    <h3>Assessment Questions</h3>
+                    <div id="assessment-questions"></div>
+                    <button class="btn btn-primary" id="submit-assessment">Submit Assessment</button>
+                    <button class="btn btn-danger" id="cancel-assessment">Cancel</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="view-reports">
+                <h3>Assessment Reports</h3>
+                
+                <div class="reports-list">
+                    {% if reports %}
+                        {% for report in reports %}
+                            <a href="/reports/{{ report }}" class="report-link" target="_blank">{{ report }}</a>
+                        {% endfor %}
+                    {% else %}
+                        <p>No reports available yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Function to hide the "View Reports" tab for patients
+        window.addEventListener('load', function() {
+            const role = sessionStorage.getItem("role");
+            
+            // Hide View Reports tab for patients only
+            if (role === "patient") {
+                // Hide the View Reports tab
+                const viewReportsTab = document.querySelector('button.tab[data-tab="view-reports"]');
+                if (viewReportsTab) {
+                    viewReportsTab.style.display = 'none';
+                }
+                
+                // Also hide the reports content
+                const viewReportsContent = document.getElementById('view-reports');
+                if (viewReportsContent) {
+                    viewReportsContent.style.display = 'none';
+                }
+            }
+        });
+    </script>
+    <script>
+        // Function to add Report tab next to View Reports tab
+        window.addEventListener('load', function() {
+            const role = sessionStorage.getItem("role");
+            
+            // Only show Report tab for doctors and caretakers
+            if (role === "doctor" || role === "caretaker") {
+                // Get the tabs container
+                const tabsContainer = document.querySelector('.tabs');
+                
+                // Create the Report tab button
+                const reportTab = document.createElement('button');
+                reportTab.className = 'tab';
+                reportTab.setAttribute('data-tab', 'report');
+                reportTab.textContent = 'Report';
+                
+                // Add it after the View Reports tab
+                const viewReportsTab = document.querySelector('button.tab[data-tab="view-reports"]');
+                if (viewReportsTab && tabsContainer) {
+                    tabsContainer.insertBefore(reportTab, viewReportsTab.nextSibling);
+                }
+                
+                // Create the Report tab content
+                const reportContent = document.createElement('div');
+                reportContent.className = 'tab-content';
+                reportContent.id = 'report';
+                reportContent.innerHTML = `
+                    <h3>Memory Activity Report</h3>
+                    <p>Generate AI analysis of patient memory assessment reports.</p>
+                    
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 20px;">
+                            <label for="patient-name-input" style="display: block; color: white; margin-bottom: 10px;">Patient Name:</label>
+                            <input type="text" id="patient-name-input" placeholder="Enter patient name" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white;">
+                        </div>
+                        
+                        <button id="analyze-btn" class="btn btn-primary">Analyze Memory Activity</button>
+                    </div>
+                    
+                    <div id="loading-indicator" style="display: none; margin-top: 20px; text-align: center; color: white;">
+                        <p>Analyzing patient reports...</p>
+                    </div>
+                    
+                    <div id="analysis-result" style="display: none; margin-top: 30px; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 10px; color: white;">
+                        <h4 style="margin-bottom: 15px;">Analysis Results</h4>
+                        <div id="result-content" style="white-space: pre-line;"></div>
+                    </div>
+                    
+                    <div id="error-message" style="display: none; margin-top: 20px; padding: 15px; background: rgba(255, 59, 48, 0.2); border: 1px solid rgba(255, 59, 48, 0.3); border-radius: 8px; color: white;">
+                    </div>
+                `;
+                
+                // Add the tab content to the page
+                const assessmentContainer = document.querySelector('.assessment-container');
+                if (assessmentContainer) {
+                    assessmentContainer.appendChild(reportContent);
+                }
+                
+                // Add click event for the tab
+                reportTab.addEventListener('click', function() {
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    
+                    // Show this tab content and mark as active
+                    reportContent.classList.add('active');
+                    reportTab.classList.add('active');
+                });
+                
+                // Add click event for the analyze button
+                document.getElementById('analyze-btn').addEventListener('click', function() {
+                    const patientName = document.getElementById('patient-name-input').value.trim();
+                    
+                    if (!patientName) {
+                        showError('Please enter a patient name');
+                        return;
+                    }
+                    
+                    // Show loading indicator
+                    document.getElementById('loading-indicator').style.display = 'block';
+                    document.getElementById('analysis-result').style.display = 'none';
+                    document.getElementById('error-message').style.display = 'none';
+                    
+                    // Call the API endpoint that connects to your report_assistant.py
+                    fetch('/generate_memory_report', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            patient_name: patientName
+                        })
+                    })
+                    .then(response => {
+                        // Check if response is OK before trying to parse JSON
+                        if (!response.ok) {
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Hide loading indicator
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        
+                        if (data.error) {
+                            showError(data.error);
+                            return;
+                        }
+                        
+                        // Show the result
+                        document.getElementById('analysis-result').style.display = 'block';
+                        document.getElementById('result-content').textContent = data.analysis;
+                    })
+                    .catch(error => {
+                        // Hide loading and show error
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        showError(`Error: ${error.message || 'Could not connect to server'}`);
+                        console.error('Error:', error);
+                    });
+                });
+                
+                // Helper function to show errors
+                function showError(message) {
+                    const errorElement = document.getElementById('error-message');
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                    document.getElementById('analysis-result').style.display = 'none';
+                }
+            }
+        });
+    </script>
+    <script>
+        // Check if user is logged in and display user info
+        window.addEventListener('load', function() {
+            const role = sessionStorage.getItem("role");
+            const username = sessionStorage.getItem("username");
+            
+            if (!role) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            // Display username
+            const usernameDisplay = document.getElementById("username-display");
+            if (username && usernameDisplay) {
+                usernameDisplay.textContent = username;
+            } else if (usernameDisplay) {
+                usernameDisplay.textContent = "User"; // Default if username is not available
+            }
+            
+            // Display role badge
+            const roleBadge = document.getElementById("role-badge");
+            if (roleBadge) {
+                if (role === "caretaker") {
+                    roleBadge.textContent = "Caretaker";
+                    roleBadge.classList.add("caretaker");
+                } else if (role === "doctor") {
+                    roleBadge.textContent = "Doctor";
+                    roleBadge.classList.add("doctor");
+                } else {
+                    // Hide role badge for patients
+                    roleBadge.style.display = "none";
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Assessment functionality
+            const selectRandomBtn = document.getElementById('select-random');
+            const startAssessmentBtn = document.getElementById('start-assessment');
+            const submitAssessmentBtn = document.getElementById('submit-assessment');
+            const cancelAssessmentBtn = document.getElementById('cancel-assessment');
+            const assessmentForm = document.querySelector('.assessment-form');
+            const assessmentQuestions = document.getElementById('assessment-questions');
+            
+            // Select random questions
+            selectRandomBtn.addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.question-item input[type="checkbox"]');
+                
+                // Uncheck all first
+                checkboxes.forEach(cb => cb.checked = false);
+                
+                // Select 10 random or all if less than 10
+                const numToSelect = Math.min(10, checkboxes.length);
+                const indices = [];
+                
+                while (indices.length < numToSelect) {
+                    const randomIndex = Math.floor(Math.random() * checkboxes.length);
+                    if (!indices.includes(randomIndex)) {
+                        indices.push(randomIndex);
+                    }
+                }
+                
+                indices.forEach(index => {
+                    checkboxes[index].checked = true;
+                });
+            });
+            
+            // Start assessment
+            startAssessmentBtn.addEventListener('click', function() {
+                const selectedQuestions = Array.from(document.querySelectorAll('.question-item input[type="checkbox"]:checked'))
+                    .map(cb => cb.value);
+                
+                if (selectedQuestions.length === 0) {
+                    alert('Please select at least one question for the assessment.');
+                    return;
+                }
+                
+                const patientName = document.getElementById('patient-name').value.trim();
+                if (!patientName) {
+                    alert('Please enter the patient name.');
+                    return;
+                }
+                
+                // Show the assessment form
+                document.querySelector('.question-selection').style.display = 'none';
+                document.querySelector('.patient-info').style.display = 'none';
+                assessmentForm.style.display = 'block';
+                
+                // Generate question inputs
+                assessmentQuestions.innerHTML = '';
+                selectedQuestions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-container';
+                    questionDiv.innerHTML = `
+                        <p><strong>Question ${index + 1}:</strong> ${question}</p>
+                        <textarea data-question="${question}" placeholder="Enter answer here"></textarea>
+                    `;
+                    assessmentQuestions.appendChild(questionDiv);
+                });
+            });
+            
+            // Submit assessment
+            submitAssessmentBtn.addEventListener('click', function() {
+                const patientName = document.getElementById('patient-name').value.trim();
+                const answerTextareas = document.querySelectorAll('#assessment-questions textarea');
+                
+                const selectedQuestions = [];
+                const answers = [];
+                
+                // Collect questions and answers
+                let allAnswered = true;
+                answerTextareas.forEach(textarea => {
+                    const question = textarea.getAttribute('data-question');
+                    const answer = textarea.value.trim();
+                    
+                    if (!answer) {
+                        allAnswered = false;
+                    }
+                    
+                    selectedQuestions.push(question);
+                    answers.push(answer);
+                });
+                
+                if (!allAnswered) {
+                    alert('Please provide an answer for all questions.');
+                    return;
+                }
+                
+                // Create assessment
+                fetch('/create_assessment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_name: patientName,
+                        selected_questions: selectedQuestions,
+                        answers: answers
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Assessment created successfully!');
+                        // Reload the page to see the new report
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error occurred'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating the assessment.');
+                });
+            });
+            
+            // Cancel assessment
+            cancelAssessmentBtn.addEventListener('click', function() {
+                document.querySelector('.question-selection').style.display = 'block';
+                document.querySelector('.patient-info').style.display = 'block';
+                assessmentForm.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
